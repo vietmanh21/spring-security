@@ -1,0 +1,17 @@
+version: '3.5'
+
+services:
+  mongo:
+    image: mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: manhnv2
+      MONGO_INITDB_ROOT_PASSWORD: manhnv2
+    volumes:
+      - C:\mongo\security:/data/db
+    ports:
+      - "27016:27017"
+
+networks:
+  security:
+    name: security
