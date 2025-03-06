@@ -1,4 +1,4 @@
-package com.manhnv.security.component;
+package com.manhnv.security.utils;
 
 public interface IErrorCode {
     long getCode();

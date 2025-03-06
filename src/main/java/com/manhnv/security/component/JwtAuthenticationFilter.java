@@ -1,4 +1,4 @@
-package com.manhnv.security.config;
+package com.manhnv.security.component;
 
 import com.manhnv.security.exception.CustomException;
 import jakarta.servlet.FilterChain;

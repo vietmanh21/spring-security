@@ -1,7 +1,7 @@
 package com.manhnv.security.component;
 
 import cn.hutool.json.JSONUtil;
-import com.manhnv.security.dto.CommonResult;
+import com.manhnv.security.utils.CommonResult;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

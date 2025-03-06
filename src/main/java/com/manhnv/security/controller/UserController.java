@@ -1,6 +1,6 @@
 package com.manhnv.security.controller;
 
-import com.manhnv.security.dto.CommonResult;
+import com.manhnv.security.utils.CommonResult;
 import com.manhnv.security.dto.UserResponse;
 import com.manhnv.security.service.UserService;
 import lombok.RequiredArgsConstructor;

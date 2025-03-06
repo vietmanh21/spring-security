@@ -1,4 +1,4 @@
-package com.manhnv.security.config;
+package com.manhnv.security.component;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;

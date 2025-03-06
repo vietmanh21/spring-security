@@ -1,6 +1,6 @@
 package com.manhnv.security.exception;
 
-import com.manhnv.security.component.IErrorCode;
+import com.manhnv.security.utils.IErrorCode;
 import lombok.Getter;
 
 @Getter

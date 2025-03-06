@@ -1,6 +1,5 @@
-package com.manhnv.security.dto;
+package com.manhnv.security.utils;
 
-import com.manhnv.security.component.IErrorCode;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 

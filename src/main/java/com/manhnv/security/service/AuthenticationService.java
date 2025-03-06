@@ -1,6 +1,6 @@
 package com.manhnv.security.service;
 
-import com.manhnv.security.config.JwtService;
+import com.manhnv.security.component.JwtService;
 import com.manhnv.security.dto.LoginRequest;
 import com.manhnv.security.dto.LoginResponse;
 import com.manhnv.security.dto.RegisterRequest;
