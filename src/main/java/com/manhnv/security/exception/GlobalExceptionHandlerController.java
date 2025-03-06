@@ -1,7 +1,5 @@
 package com.manhnv.security.exception;
 
-
-
 import com.manhnv.security.utils.CommonResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.BindingResult;
