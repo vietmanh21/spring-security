@@ -33,27 +33,14 @@ public class AuthenticationController {
             HttpServletResponse response
     ) {
         LoginResponse loginResponse = service.login(request);
-        // Lưu refresh token vào HttpOnly cookie
-        Cookie refreshCookie = new Cookie("refreshToken", loginResponse.getRefreshToken());
-        refreshCookie.setHttpOnly(true);
-        refreshCookie.setSecure(true);
-        refreshCookie.setPath("/auth");
-        refreshCookie.setMaxAge((int) (refreshExpiration / 1000));
-
+        Cookie refreshCookie = setCookie(loginResponse.getRefreshToken(), (int) (refreshExpiration / 1000));
         response.addCookie(refreshCookie);
         return CommonResult.success(loginResponse);
     }
 
     @PostMapping("/refresh-token")
     public CommonResult<?> refreshToken(HttpServletRequest request, HttpServletResponse response) {
-        String refreshToken = null;
-        if (request.getCookies() != null) {
-            for (Cookie cookie : request.getCookies()) {
-                if ("refreshToken".equals(cookie.getName())) {
-                    refreshToken = cookie.getValue();
-                }
-            }
-        }
+        String refreshToken = getTokenFromCookie(request);
 
         if (refreshToken == null) {
             return CommonResult.unauthorized("No refresh token found.");
@@ -68,6 +55,18 @@ public class AuthenticationController {
 
     @PostMapping("/logout")
     public CommonResult<?> logout(HttpServletRequest request, HttpServletResponse response) {
+        String refreshToken = getTokenFromCookie(request);
+
+        if (refreshToken == null) {
+            return CommonResult.unauthorized("No refresh token found.");
+        }
+        service.logout(refreshToken);
+        Cookie cookie = setCookie(null, 0);
+        response.addCookie(cookie);
+        return CommonResult.success("Logout successful");
+    }
+
+    private String getTokenFromCookie(HttpServletRequest request) {
         String refreshToken = null;
         if (request.getCookies() != null) {
             for (Cookie cookie : request.getCookies()) {
@@ -77,17 +76,15 @@ public class AuthenticationController {
             }
         }
 
-        if (refreshToken == null) {
-            return CommonResult.unauthorized("No refresh token found.");
-        }
-        service.logout(refreshToken);
-        Cookie cookie = new Cookie("refreshToken", null);
+        return refreshToken;
+    }
+
+    private Cookie setCookie(String value, int age) {
+        Cookie cookie = new Cookie("refreshToken", value);
         cookie.setHttpOnly(true);
         cookie.setSecure(true);
         cookie.setPath("/auth");
-        cookie.setMaxAge(0);
-
-        response.addCookie(cookie);
-        return CommonResult.success("Logout successful");
+        cookie.setMaxAge(age);
+        return cookie;
     }
 }
