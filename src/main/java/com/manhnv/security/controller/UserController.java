@@ -17,7 +17,7 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping("user/profile")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public CommonResult<UserResponse> getUserProfile(final Authentication authentication) {
         UserResponse result = userService.profile(authentication.getName());
         return CommonResult.success(result);

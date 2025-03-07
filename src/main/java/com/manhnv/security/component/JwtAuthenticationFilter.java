@@ -35,7 +35,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String header = request.getHeader(tokenHeader);
         final String jwt;
         final String userEmail;
-        // kiểm tra xem request có token hay ko
         if (header == null ||!header.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;

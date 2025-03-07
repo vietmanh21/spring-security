@@ -1,12 +1,10 @@
 package com.manhnv.security.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.manhnv.security.component.JwtService;
-import com.manhnv.security.dto.LoginRequest;
-import com.manhnv.security.dto.LoginResponse;
-import com.manhnv.security.dto.RegisterRequest;
-import com.manhnv.security.dto.UserResponse;
+import com.manhnv.security.dto.*;
 import com.manhnv.security.exception.CustomException;
-import com.manhnv.security.model.Token;
+import com.manhnv.security.model.RefreshToken;
 import com.manhnv.security.repository.RoleRepository;
 import com.manhnv.security.repository.TokenRepository;
 import com.manhnv.security.repository.UserRepository;
@@ -15,6 +13,7 @@ import com.manhnv.security.model.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -24,16 +23,20 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthenticationService {
-
+    @Value("${application.security.jwt.refresh-token.expiration}")
+    private long refreshExpiration;
 
     private final UserRepository repository;
     private final PasswordEncoder passwordEncoder;
@@ -41,6 +44,7 @@ public class AuthenticationService {
     private final AuthenticationManager authenticationManager;
     private final RoleRepository roleRepository;
     private final TokenRepository tokenRepository;
+    private final RedisService redisService;
 
     private static final String ROLE_USER = "USER";
 
@@ -95,10 +99,9 @@ public class AuthenticationService {
             throw new CustomException("Authentication failed: " + ex.getMessage());
         }
 
-        String jwtToken = jwtService.generateToken(userDetails);
-        String refreshToken = jwtService.generateRefreshToken(userDetails);
-        revokeAllUserTokens(userDetails);
-        saveUserToken(userDetails, refreshToken);
+        String jwtToken = jwtService.generateToken(userDetails.getUsername());
+        String refreshToken = UUID.randomUUID().toString();
+        redisService.set(refreshToken, userDetails.getUsername(), refreshExpiration);
         BeanUtils.copyProperties(userDetails, loginResponse);
         loginResponse.setRoles(userDetails.getRoles().stream().map(Role::getName).collect(Collectors.toSet()));
         loginResponse.setAccessToken(jwtToken);
@@ -106,46 +109,23 @@ public class AuthenticationService {
         return loginResponse;
     }
 
-    public String refreshToken(String oldToken) {
-        String refreshToken = oldToken.substring(7);
-        String userEmail = jwtService.extractUsername(refreshToken);
-        if (userEmail != null) {
-            User user = this.repository.findByEmail(userEmail)
-                    .orElseThrow(() -> new CustomException("User not found in refreshToken"));
-            if (jwtService.isTokenValid(refreshToken, user)) {
-                return jwtService.generateToken(user);
-            } else {
-                revokeAllUserTokens(user);
-            }
+    public RefreshTokenResponse refreshToken(String oldToken) {
+        String userEmail = (String) redisService.get(oldToken);
+        if (userEmail == null) {
+            return null;
         }
-        return null;
-    }
-
-    private void saveUserToken(User user, String jwtToken) {
-        var token = Token.builder()
-                .user(user)
-                .token(jwtToken)
-                .expired(false)
-                .revoked(false)
-                .build();
-        tokenRepository.save(token);
-    }
-
-    private void revokeAllUserTokens(User user) {
-        List<Token> validUserTokens = tokenRepository.findAllValidTokenByUser(user.getId());
-        if (validUserTokens.isEmpty())
-            return;
-        validUserTokens.forEach(token -> {
-            token.setExpired(true);
-            token.setRevoked(true);
-        });
-        tokenRepository.saveAll(validUserTokens);
+        redisService.del(oldToken);
+        String jwtToken = jwtService.generateToken(userEmail);
+        String refreshToken = UUID.randomUUID().toString();
+        redisService.set(refreshToken, userEmail, refreshExpiration);
+        return new RefreshTokenResponse(jwtToken, refreshToken);
     }
 
     public void logout(String refreshToken) {
-        Token token = tokenRepository.findByToken(refreshToken)
-                .orElseThrow(() -> new CustomException("Token not found"));
-        token.setRevoked(true);
-        tokenRepository.save(token);
+        String userEmail = (String) redisService.get(refreshToken);
+        if (userEmail == null) {
+            throw new CustomException("Token not found");
+        }
+        redisService.del(refreshToken);
     }
 }

@@ -1,17 +1,13 @@
 package com.manhnv.security.repository;
 
-import com.manhnv.security.model.Token;
+import com.manhnv.security.model.RefreshToken;
 import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
+import java.time.Instant;
 import java.util.Optional;
 
 @Repository
-public interface TokenRepository extends MongoRepository<Token, String> {
-    @Query("{ 'user.id' : ?0,  '$or': [ { 'expired' : false }, { 'revoked' : false } ] }")
-    List<Token> findAllValidTokenByUser(String id);
-
-    Optional<Token> findByToken(String token);
+public interface TokenRepository extends MongoRepository<RefreshToken, String> {
+    Optional<RefreshToken> findByIdAndExpiresAtAfter(String id, Instant expiresAtAfter);
 }
