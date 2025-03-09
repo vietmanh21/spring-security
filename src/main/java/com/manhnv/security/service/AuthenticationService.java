@@ -1,12 +1,9 @@
 package com.manhnv.security.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.manhnv.security.component.JwtService;
 import com.manhnv.security.dto.*;
 import com.manhnv.security.exception.CustomException;
-import com.manhnv.security.model.RefreshToken;
 import com.manhnv.security.repository.RoleRepository;
-import com.manhnv.security.repository.TokenRepository;
 import com.manhnv.security.repository.UserRepository;
 import com.manhnv.security.model.Role;
 import com.manhnv.security.model.User;
@@ -43,7 +40,6 @@ public class AuthenticationService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final RoleRepository roleRepository;
-    private final TokenRepository tokenRepository;
     private final RedisService redisService;
 
     private static final String ROLE_USER = "USER";

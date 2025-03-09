@@ -1,1 +1,1 @@
-Spring security - jwt
+Spring security - jwt - redis - mongodb
